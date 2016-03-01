@@ -117,6 +117,126 @@
 		return ($new);
 	}
 
+	function get_serie_category($line)
+	{
+		$new = NULL;
+		$pos = 0;
+		$index = 0;
+		$array = explode("Genre :", $line);
+		if (empty($array[1]))
+			$array = explode("Genres :", $line);
+		$array[1] = trim($array[1], ' \t\r\n');
+		if ($array[1][0] == "<")
+		{
+			$array_2 = explode('<span itemprop="genre">', $array[1]);
+			foreach ($array_2 as $value)
+			{
+				$tmp = NULL;
+				$pos = 0;
+				$value = trim($value, ' \t\r\n');
+				if ($value[0] != '<')
+				{
+					while ($value[$pos] != NULL && $value[$pos] != '<')
+					{
+						$tmp = ''.$tmp.''.$value[$pos].'';
+						$pos++;
+					}
+					if (!empty($tmp))
+					{
+						if (!empty($array_2[($index + 1)]))
+							$new = ''.$new.''.$tmp.',';
+						else
+							$new = ''.$new.''.$tmp.'';
+					}
+				}
+				$index++;
+			}
+			return ($new);
+		}
+		else
+		{
+			while ($array[1][$pos] != NULL && $array[1][$pos] != "-" && $array[1][$pos] != "<" && $array[1][$pos] != ">" && $array[1][$pos] != '"')
+			{
+				$new = ''.$new.''.$array[1][$pos].'';
+				$pos++;
+			}
+			return ($new);
+		}
+	}
+
+	function get_serie_actors($line)
+	{
+		echo "\e[0;31m";
+		$array = explode("Avec ", $line);
+		$index = 0;
+		$pos = 0;
+		$new = NULL;
+		if ($array[1][0] == "<")
+		{
+			$array_2 = explode('<span itemprop="name">', $array[1]);
+			foreach ($array_2 as $value)
+			{
+				$pos = 0;
+				$tmp = NULL;
+				if ($value[0] != '<')
+				{
+					while ($value[$pos] != NULL && $value[$pos] != "-" && $value[$pos] != "<" && $value[$pos] != ">" && $value[$pos] != '"')
+					{
+						$tmp = ''.$tmp.''.$value[$pos].'';
+						$pos++;
+					}
+					$tmp = trim($tmp, ' \t\r\n');
+					if (!empty($array_2[($index + 1)]))
+							$new = ''.$new.''.$tmp.',';
+						else
+							$new = ''.$new.''.$tmp.'';
+				}
+				$index++;
+			}
+			return ($new);
+		}
+	}
+
+	function get_serie_by($line)
+	{
+		$pos = 0;
+		$index = 0;
+		$new = NULL;
+		$tmp = NULL;
+		$array = explode("Créé", $line);
+		if (strpos($line, 'itemprop="creator"'))
+		{
+			$array_2 = explode('<span itemprop="name">', $array[1]);
+			$new = "Créé par ";
+			foreach ($array_2 as $value)
+			{
+				if ($index)
+				{
+					while ($value[$pos] != NULL && $value[$pos] != "-" && $value[$pos] != "<" && $value[$pos] != ">" && $value[$pos] != '"')
+					{
+						$tmp = ''.$tmp.''.$value[$pos].'';
+						$pos++;
+					}
+					$tmp = trim($tmp, ' \t\r\n');
+					$new = ''.$new.''.$tmp.'';
+					break ;				
+				}
+				$index++;
+			}
+			return ($new);
+		}
+		else
+		{
+			$new = "Créé";
+			while ($array[1][$pos] != NULL && $array[1][$pos] != "-" && $array[1][$pos] != "<" && $array[1][$pos] != ">" && $array[1][$pos] != '"')
+			{
+				$new = ''.$new.''.$array[1][$pos].'';
+				$pos++;
+			}
+			return ($new);
+		}
+	}
+
 	function get_serie($link)
 	{
 		$ch = curl_init();
@@ -134,6 +254,9 @@
 		$serie_format = NULL;
 		$serie_country = NULL;
 		$serie_state = NULL;
+		$serie_category = NULL;
+		$serie_actors = NULL;
+		$serie_by = NULL;
 		while ($output[$var] != NULL)
 		{
 			if (!strcmp($output[$var], "\n"))
@@ -166,6 +289,21 @@
 					if (empty($serie_state))
 						$serie_state = ''.$serie_state.''.get_serie_state($line).'';
 				}
+				if (strpos($line, "Genre") || strpos($line, "Genrees"))
+				{
+					if (empty($serie_category))
+						$serie_category = ''.$serie_category.''.get_serie_category($line).'';
+				}
+				if (strpos($line, "Avec "))
+				{
+					if (empty($serie_actors))
+						$serie_actors = ''.$serie_actors.''.get_serie_actors($line).'';
+				}
+				if (strpos($line, "Créé"))
+				{
+					if (empty($serie_by))
+						$serie_by = ''.$serie_by.''.get_serie_by($line).'';
+				}
 				$index = 0;
 				$line = NULL;
 			}
@@ -176,6 +314,9 @@
 			}
 			$var++;
 		}
+		if (empty($serie_category))
+			$serie_category = "Inconnu";
+
 		echo "\n";
 		echo "\e[0;35m";
 		echo '('.$serie_name.')';
@@ -215,6 +356,30 @@
 		echo ' SERIE_STATE : ';
 		echo "\e[0;34m";
 		echo $serie_state;
+
+		echo "\n";
+		echo "\e[0;35m";
+		echo '('.$serie_name.')';
+		echo "\e[0;37m";
+		echo ' SERIE_CATEGORY : ';
+		echo "\e[0;34m";
+		echo $serie_category;
+
+		echo "\n";
+		echo "\e[0;35m";
+		echo '('.$serie_name.')';
+		echo "\e[0;37m";
+		echo ' SERIE_ACTORS : ';
+		echo "\e[0;34m";
+		echo $serie_actors;
+
+		echo "\n";
+		echo "\e[0;35m";
+		echo '('.$serie_name.')';
+		echo "\e[0;37m";
+		echo ' SERIE_MADE_BY: ';
+		echo "\e[0;34m";
+		echo $serie_by;
 
 		echo "\n";
 	}
