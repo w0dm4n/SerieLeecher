@@ -257,6 +257,7 @@
 		$serie_category = NULL;
 		$serie_actors = NULL;
 		$serie_by = NULL;
+		$dpstream_link = $link;
 		while ($output[$var] != NULL)
 		{
 			if (!strcmp($output[$var], "\n"))
@@ -382,5 +383,9 @@
 		echo $serie_by;
 
 		echo "\n";
+		$link = mysql_connect("localhost", "root", "123456");
+		mysql_select_db("strizzstream");
+		mysql_query("SET NAMES UTF8");
+		mysql_query('INSERT INTO series(serie_name,serie_summary,serie_img,serie_format,serie_country,serie_state,serie_category,serie_actors,serie_by,dpstream_link) VALUES("'.$serie_name.'", "'.$serie_summary.'", "'.$serie_img.'", "'.$serie_format.'", "'.$serie_country.'", "'.$serie_state.'", "'.$serie_category.'", "'.$serie_actors.'", "'.$serie_by.'", "'.$dpstream_link.'")');
 	}
 ?>
